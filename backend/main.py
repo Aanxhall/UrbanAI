@@ -9,9 +9,9 @@ import numpy as np
 
 app = FastAPI()
 
-# ==============================
+# =========================
 # CORS
-# ==============================
+# =========================
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,9 +20,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ==============================
+# =========================
 # PATHS
-# ==============================
+# =========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 FRONTEND_DIR = os.path.join(BASE_DIR, "../frontend")
@@ -30,25 +30,30 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "../frontend")
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ==============================
-# STATIC FILES
-# ==============================
+# =========================
+# SERVE CSS / JS / ASSETS
+# =========================
 app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIR, "assets")), name="assets")
 
 app.mount("/js", StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")), name="js")
 
-# ==============================
-# FRONTEND ROUTES
-# ==============================
-
+# =========================
+# HOME PAGE (LOGIN)
+# =========================
 @app.get("/")
-def login_page():
+def serve_login():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
+# =========================
+# DASHBOARD
+# =========================
 @app.get("/dashboard")
-def dashboard():
+def serve_dashboard():
     return FileResponse(os.path.join(FRONTEND_DIR, "dashboard.html"))
 
+# =========================
+# OTHER PAGES
+# =========================
 @app.get("/reports")
 def reports():
     return FileResponse(os.path.join(FRONTEND_DIR, "reports.html"))
@@ -61,18 +66,28 @@ def analytics():
 def alerts():
     return FileResponse(os.path.join(FRONTEND_DIR, "alerts.html"))
 
-@app.get("/road-damage")
+@app.get("/road_damage")
 def road_damage():
     return FileResponse(os.path.join(FRONTEND_DIR, "road_damage.html"))
 
 @app.get("/discover")
 def discover():
-    return FileResponse(os.path.join(FRONTEND_DIR, "discover.html"))
+    return FileResponse(os.path.join(FRONTEND_DIR, "Discover.html"))
 
-# ==============================
-# AI ROAD DAMAGE DETECTION
-# ==============================
+@app.get("/register")
+def register():
+    return FileResponse(os.path.join(FRONTEND_DIR, "register.html"))
 
+# =========================
+# CSS FILE
+# =========================
+@app.get("/style.css")
+def style():
+    return FileResponse(os.path.join(FRONTEND_DIR, "style.css"))
+
+# =========================
+# ROAD DAMAGE AI
+# =========================
 @app.post("/detect-road-damage")
 async def detect_damage(file: UploadFile = File(...)):
 
@@ -85,17 +100,14 @@ async def detect_damage(file: UploadFile = File(...)):
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # EDGE DETECTION
+    # Feature 1: Edge Detection
     edges = cv2.Canny(gray, 100, 200)
+    edge_density = np.sum(edges > 0) / (gray.shape[0] * gray.shape[1])
 
-    edge_density = np.sum(edges > 0) / (
-        gray.shape[0] * gray.shape[1]
-    )
-
-    # TEXTURE ANALYSIS
+    # Feature 2: Texture Variation
     variance = np.var(gray)
 
-    # SMART AI-LIKE LOGIC
+    # AI-like logic
     if edge_density > 0.15 and variance > 500:
         result = "Severe Road Damage 🚨"
 
