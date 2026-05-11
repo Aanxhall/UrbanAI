@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UrbanAI - AI Alerts Center</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            background: #0b1120;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .main h1 {
+            margin-bottom: 30px;
+            color: #38bdf8;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+
+        .weather-ai-card {
+            background: linear-gradient(135deg, #3f1d1d, #1e293b);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+
+        .toast {
+            background: #1e293b;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(80px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-home-bar">
+    <a href="dashboard.html" class="home-btn">🏠</a>
+</div>
+
+<div class="main">
+    <h1>🚨 AI Alerts Center</h1>
+
+    <div class="cards" id="alertCards"></div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+function showToast(message) {
+    const container = document.getElementById("toastContainer");
+
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerHTML = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
+}
+
+function getCurrentTime() {
+    const now = new Date();
+
+    return now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+function playCriticalAlertSound() {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(900, audioContext.currentTime);
+
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+
+    setTimeout(() => {
+        oscillator.stop();
+        audioContext.close();
+    }, 300);
+
+}
+function generateAIAlerts() {
+    const reports = JSON.parse(localStorage.getItem("reports")) || [];
+    const alertContainer = document.getElementById("alertCards");
+
+    alertContainer.innerHTML = "";
+
+    const currentTime = getCurrentTime();
+
+    if (reports.length === 0) {
+        alertContainer.innerHTML = `
+            <div class="card">
+                <h3>✅ No Active Alerts</h3>
+                <p>City conditions are stable.</p>
+                <small>Updated at ${currentTime}</small>
+            </div>
+        `;
+        return;
+    }
+
+    let high = reports.filter(
+        r => (r.severity || "").toLowerCase() === "high"
+    ).length;
+
+    let medium = reports.filter(
+        r => (r.severity || "").toLowerCase() === "medium"
+    ).length;
+
+    let pending = reports.filter(
+        r => (r.status || "").toLowerCase() === "pending"
+    ).length;
+
+    if (high >= 1) {
+    alertContainer.innerHTML += `
+        <div class="card critical-flash">
+            <h3>🚨 Critical Risk Alert</h3>
+            <p>${high} severe issues detected</p>
+            <small>Updated at ${currentTime}</small>
+        </div>
+    `;
+
+    showToast("🚨 Critical city alert refreshed");
+    playCriticalAlertSound();
+}
+
+    if (medium >= 1) {
+        alertContainer.innerHTML += `
+            <div class="card">
+                <h3>⚠️ Moderate Alert</h3>
+                <p>${medium} medium severity issues active</p>
+                <small>Updated at ${currentTime}</small>
+            </div>
+        `;
+    }
+
+    if (pending >= 1) {
+        alertContainer.innerHTML += `
+            <div class="card">
+                <h3>🚗 Traffic Prediction Alert</h3>
+                <p>Congestion expected soon</p>
+                <small>AI updated at ${currentTime}</small>
+            </div>
+        `;
+    }
+
+    alertContainer.innerHTML += `
+        <div class="card weather-ai-card">
+            <h3>🌦️ Weather AI Alert</h3>
+            <p>Heatwave → stay hydrated & avoid noon travel</p>
+            <small>Live weather sync ${currentTime}</small>
+        </div>
+    `;
+}
+
+window.onload = function () {
+    generateAIAlerts();
+    setInterval(generateAIAlerts, 5000);
+};
+</script>
+
+</body>
+</html>

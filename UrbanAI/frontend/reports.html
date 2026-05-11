@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>UrbanAI - Reports</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>UrbanAI</h2>
+        <p class="tagline">AI-powered Urban Intelligence</p>
+
+        <ul>
+            <li onclick="goTo('dashboard.html')">🏠 Dashboard</li>
+            <li class="active">📋 Reports</li>
+            <li onclick="goTo('analytics.html')">📊 Analytics</li>
+            <li onclick="goTo('alerts.html')">🚨 Alerts</li>
+        </ul>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+
+        <h1>📋 Smart Issue Reporting</h1>
+
+        <div class="report-card">
+
+            <input type="text" id="issue"
+                placeholder="Describe issue (e.g. pothole, garbage, traffic jam)">
+
+            <select id="type">
+                <option value="auto">Auto Detect (AI)</option>
+                <option value="traffic">Traffic</option>
+                <option value="waste">Waste</option>
+                <option value="road">Road Damage</option>
+                <option value="crowd">Crowd</option>
+            </select>
+
+            <input type="file" id="issueImage" accept="image/*">
+
+            <p id="locationStatus">📍 Detecting location...</p>
+
+            <button onclick="submitReport()">🚀 Submit Report</button>
+        </div>
+
+        <h3>📊 Recent Reports</h3>
+        <div id="reportList" class="report-grid"></div>
+
+    </div>
+</div>
+
+<script>
+let currentLocation = null;
+let currentLocationText = "Unknown Area";
+
+/* LOCATION DETECTION */
+navigator.geolocation.getCurrentPosition(
+    (pos) => {
+        currentLocation = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+        };
+
+        currentLocationText =
+            `Lat ${pos.coords.latitude.toFixed(3)}, Lng ${pos.coords.longitude.toFixed(3)}`;
+
+        document.getElementById("locationStatus").innerText =
+            "📍 Location detected";
+    },
+    () => {
+        document.getElementById("locationStatus").innerText =
+            "❌ Location access denied";
+    }
+);
+
+/* AI ISSUE TYPE */
+function classifyIssue(text) {
+    text = text.toLowerCase();
+
+    if (
+        text.includes("pothole") ||
+        text.includes("road") ||
+        text.includes("damage")
+    ) return "road";
+
+    if (
+        text.includes("garbage") ||
+        text.includes("waste")
+    ) return "waste";
+
+    if (
+        text.includes("traffic") ||
+        text.includes("jam")
+    ) return "traffic";
+
+    if (
+        text.includes("crowd") ||
+        text.includes("rush")
+    ) return "crowd";
+
+    return "general";
+}
+
+/* SMART AI SEVERITY */
+function detectSeverity(text) {
+    text = text.toLowerCase();
+
+    /* HIGH */
+    if (
+        text.includes("accident") ||
+        text.includes("danger") ||
+        text.includes("urgent") ||
+        text.includes("severe") ||
+        text.includes("huge") ||
+        text.includes("major") ||
+        text.includes("broken") ||
+        text.includes("collapsed") ||
+        text.includes("flood") ||
+        text.includes("fire") ||
+        text.includes("critical") ||
+        text.includes("emergency") ||
+        text.includes("injury") ||
+        text.includes("deadly") ||
+        text.includes("pothole")
+    ) {
+        return "high";
+    }
+
+    /* MEDIUM */
+    if (
+        text.includes("bad") ||
+        text.includes("heavy") ||
+        text.includes("delay") ||
+        text.includes("crowded") ||
+        text.includes("large") ||
+        text.includes("big") ||
+        text.includes("slow") ||
+        text.includes("damaged")
+    ) {
+        return "medium";
+    }
+
+    /* LOW */
+    return "low";
+}
+
+/* SUBMIT REPORT */
+function submitReport() {
+    let issue = document.getElementById("issue").value;
+    let selectedType = document.getElementById("type").value;
+    let imageInput = document.getElementById("issueImage");
+
+    if (!issue) {
+        alert("Enter issue!");
+        return;
+    }
+
+    let type = selectedType === "auto"
+        ? classifyIssue(issue)
+        : selectedType;
+
+    let severity = detectSeverity(issue);
+
+    let reports = JSON.parse(localStorage.getItem("reports")) || [];
+
+    let reader = new FileReader();
+
+    reader.onload = function () {
+        let newReport = {
+            issue: issue,
+            type: type,
+            status: "pending",
+            severity: severity,
+            location: currentLocationText,
+            coordinates: currentLocation,
+            image: imageInput.files[0]
+                ? reader.result
+                : null,
+            timestamp: new Date().toLocaleString()
+        };
+
+        reports.push(newReport);
+
+        localStorage.setItem("reports", JSON.stringify(reports));
+
+        alert(`✅ Report submitted (${type}) • Severity: ${severity}`);
+
+        document.getElementById("issue").value = "";
+        document.getElementById("issueImage").value = "";
+
+        displayReports();
+    };
+
+    if (imageInput.files[0]) {
+        reader.readAsDataURL(imageInput.files[0]);
+    } else {
+        reader.onload();
+    }
+}
+
+/* RESOLVE */
+function markResolved(index) {
+    let reports = JSON.parse(localStorage.getItem("reports")) || [];
+
+    reports[index].status = "resolved";
+
+    localStorage.setItem("reports", JSON.stringify(reports));
+
+    displayReports();
+}
+
+/* DISPLAY */
+function displayReports() {
+    let reports = JSON.parse(localStorage.getItem("reports")) || [];
+    let container = document.getElementById("reportList");
+
+    container.innerHTML = "";
+
+    reports.forEach((r, index) => {
+        container.innerHTML += `
+            <div class="card modern-card">
+                <div class="card-top">
+                    <h3>🚨 ${r.issue}</h3>
+                    <span class="sev ${r.severity}">
+                        ${r.severity.toUpperCase()}
+                    </span>
+                </div>
+
+                <div class="card-body">
+                    <p>📂 <b>Type:</b> ${r.type}</p>
+                    <p>📌 <b>Status:</b> ${r.status}</p>
+                    <p>📍 <b>Area:</b> ${r.location}</p>
+
+                    ${
+                        r.image
+                        ? `<img src="${r.image}" class="report-image">`
+                        : ""
+                    }
+
+                    ${
+                        r.status !== "resolved"
+                        ? `<button class="resolve-btn"
+                            onclick="markResolved(${index})">
+                            ✅ Mark Resolved
+                           </button>`
+                        : `<button class="resolved-btn">
+                            ✔ Resolved
+                           </button>`
+                    }
+                </div>
+            </div>
+        `;
+    });
+}
+
+window.onload = displayReports;
+</script>
+
+<script src="js/dashboard.js"></script>
+
+</body>
+</html>
