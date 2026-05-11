@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UrbanAI Register</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins', sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: radial-gradient(circle at center, #0f274d 0%, #020617 70%);
+    color:white;
+}
+
+.register-wrapper{
+    width:100%;
+    max-width:520px;
+    padding:40px;
+}
+
+.register-card{
+    background: rgba(15,23,42,0.55);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:24px;
+    padding:42px;
+    backdrop-filter: blur(16px);
+    box-shadow:0 20px 60px rgba(0,0,0,0.45);
+}
+
+h1{
+    font-size:42px;
+    font-weight:700;
+    text-align:center;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    text-align:center;
+    color:#cbd5e1;
+    margin-bottom:30px;
+    font-size:18px;
+}
+
+label{
+    display:block;
+    margin:14px 0 8px;
+    color:#e2e8f0;
+}
+
+input{
+    width:100%;
+    padding:16px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.08);
+    background: rgba(30,41,59,0.85);
+    color:white;
+    outline:none;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    margin-top:22px;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    background: linear-gradient(90deg,#38bdf8,#6366f1);
+    color:white;
+    font-size:20px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.back-btn{
+    margin-top:16px;
+    background: transparent;
+    border:1px solid #4f46e5;
+}
+
+.footer-note{
+    text-align:center;
+    margin-top:22px;
+    color:#94a3b8;
+    font-size:14px;
+}
+</style>
+</head>
+<body>
+
+<div class="register-wrapper">
+    <div class="register-card">
+        <h1>Create Account</h1>
+        <p class="subtitle">Register as a new UrbanAI user</p>
+
+        <label>Full Name</label>
+        <input type="text" id="name" placeholder="Enter your name">
+
+        <label>Email</label>
+        <input type="email" id="email" placeholder="Enter your email">
+
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Create password">
+
+        <button onclick="registerUser()">Register</button>
+        <button class="back-btn" onclick="goBack()">Back to Login</button>
+
+        <div class="footer-note">Smart • Clean • Secure</div>
+    </div>
+</div>
+
+<script>
+function registerUser() {
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if(!name || !email || !password){
+        alert("Please fill all fields");
+        return;
+    }
+
+    localStorage.setItem("urbanai_logged_in","true");
+    localStorage.setItem("urbanai_user",email);
+    localStorage.setItem("urbanai_name",name);
+    localStorage.setItem("urbanai_user_type","new");
+
+    // clean fresh dashboard
+    localStorage.removeItem("dashboardData");
+
+    window.location.href = "dashboard.html";
+}
+
+function goBack() {
+    window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

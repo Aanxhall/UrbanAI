@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>UrbanAI - Road Damage Detection</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="top-home-bar">
+    <a href="dashboard.html" class="home-btn">🏠</a>
+</div>
+
+<div class="main">
+    <style>
+        .main h1 {
+            margin-bottom: 30px;
+            color: #38bdf8;
+        }
+    </style>
+    <h1>🛣️ Road Damage Detection (AI Powered)</h1>
+
+    <input type="file" id="fileInput">
+    <button onclick="uploadImage()">Upload</button>
+
+    <h3 id="result"></h3>
+
+    <!-- NEW AI DATA DISPLAY -->
+    <div id="aiData" style="margin-top:20px;"></div>
+
+    <img id="outputImage" width="300" style="margin-top:10px;">
+</div>
+
+<script>
+async function uploadImage() {
+    let fileInput = document.getElementById("fileInput");
+    let file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select an image!");
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append("file", file);
+
+    let response = await fetch("http://127.0.0.1:8000/detect-road-damage", {
+        method: "POST",
+        body: formData
+    });
+
+    let data = await response.json();
+
+    // Show result
+    document.getElementById("result").innerText = data.message;
+
+    // 🔥 SHOW AI METRICS
+    document.getElementById("aiData").innerHTML = `
+        <div class="card">
+            <h3>🧠 AI Analysis</h3>
+            <p>Edge Density: ${data.edge_density.toFixed(4)}</p>
+            <p>Texture Variance: ${data.texture_variance.toFixed(2)}</p>
+        </div>
+    `;
+
+    // Show image preview
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById("outputImage").src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // 🚀 Auto-create report if damage detected
+  // 🚀 Auto-create report if damage detected
+if (data.message.includes("Damage")) {
+
+    let reports = JSON.parse(localStorage.getItem("reports")) || [];
+
+    let severity = "low";
+    if (data.message.includes("Severe")) severity = "high";
+    else if (data.message.includes("Moderate")) severity = "medium";
+
+    let newReport = {
+        issue: data.message,
+        type: "road",
+        status: "pending",
+        severity: severity,
+        timestamp: new Date().toLocaleString()
+    };
+
+    reports.push(newReport);
+    localStorage.setItem("reports", JSON.stringify(reports));
+
+    console.log("AI report added with severity");
+}
+}
+</script>
+
+</body>
+</html>

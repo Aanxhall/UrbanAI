@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>UrbanAI - Analytics</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    
+<div class="top-home-bar">
+    <a href="dashboard.html" class="home-btn">🏠</a>
+</div>
+
+
+
+<div class="main">
+    <h1>📊 Analytics</h1>
+<style>
+    .main h1 {
+            margin-bottom: 10px;
+            color: #38bdf8;
+        }
+</style>
+    <div class="cards">
+        <div class="card">
+            <h3>Total Complaints</h3>
+            <p id="totalComplaints">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Resolved</h3>
+            <p id="resolvedComplaints">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Pending</h3>
+            <p id="pendingComplaints">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Efficiency</h3>
+            <p id="efficiency">0%</p>
+        </div>
+
+        <div class="card chart-card">
+            <h3>AI Complaints Overview</h3>
+            <canvas id="myChart"></canvas>
+        </div>
+
+        <div class="card risk-alert-card">
+            <h3>🚨 High Risk Alert</h3>
+            <p id="riskAlertText">Scanning city risk levels...</p>
+        </div>
+<div class="card traffic-ai-card">
+    <h3>🚦 AI Traffic Risk</h3>
+    <p id="trafficRisk">Analyzing live city traffic...</p>
+</div>
+    </div>
+</div>
+
+<script>
+const reports = JSON.parse(localStorage.getItem("reports")) || [];
+
+// ===== REAL TIME COUNTS =====
+const total = reports.length;
+const resolved = reports.filter(r => r.status === "resolved").length;
+const pending = total - resolved;
+const efficiency = total > 0 ? Math.round((resolved / total) * 100) : 0;
+
+// ===== UPDATE KPI UI =====
+document.getElementById("totalComplaints").textContent = total;
+document.getElementById("resolvedComplaints").textContent = resolved;
+document.getElementById("pendingComplaints").textContent = pending;
+document.getElementById("efficiency").textContent = efficiency + "%";
+
+// ===== AI CATEGORY ANALYSIS =====
+let road = 0;
+let garbage = 0;
+let water = 0;
+let other = 0;
+
+reports.forEach(report => {
+    const text = (report.issue || "").toLowerCase();
+
+    if (text.includes("road") || text.includes("pothole")) {
+        road++;
+    } 
+    else if (text.includes("garbage") || text.includes("waste")) {
+        garbage++;
+    } 
+    else if (text.includes("water") || text.includes("leak")) {
+        water++;
+    } 
+    else {
+        other++;
+    }
+});
+
+// ===== CHART =====
+const ctx = document.getElementById("myChart");
+const canvasContext = ctx.getContext("2d");
+
+const gradientActual = canvasContext.createLinearGradient(0, 0, 0, 400);
+gradientActual.addColorStop(0, "rgba(54, 162, 235, 0.9)");
+gradientActual.addColorStop(1, "rgba(54, 162, 235, 0.05)");
+
+
+// ===== AI PREDICTION =====
+const predictedRoad = Math.ceil(road * 1.2);
+const predictedGarbage = Math.ceil(garbage * 1.15);
+const predictedWater = Math.ceil(water * 1.1);
+const predictedOther = Math.ceil(other * 1.05);
+
+new Chart(ctx, {
+    type: "line",
+    data: {
+        labels: ["Road", "Garbage", "Water", "Other"],
+        datasets: [
+            {
+                label: "Current AI Complaint Trend",
+                data: [road, garbage, water, other],
+                fill: true,
+                backgroundColor: gradientActual,
+                borderColor: "rgba(54, 162, 235, 1)",
+                borderWidth: 4,
+                tension: 0.4,
+                pointBackgroundColor: "#36a2eb",
+                pointBorderColor: "#ffffff",
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                animations: {
+                    y: {
+                        from: 0
+                    }
+                }
+            },
+            {
+                label: "AI Predicted Next Trend",
+                data: [
+                    predictedRoad,
+                    predictedGarbage,
+                    predictedWater,
+                    predictedOther
+                ],
+                fill: false,
+                borderColor: "rgba(255, 99, 132, 1)",
+                borderWidth: 3,
+                borderDash: [8, 6],
+                tension: 0.4,
+                pointBackgroundColor: "#ff6384",
+                pointBorderColor: "#ffffff",
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                animations: {
+                    y: {
+                        from: 0
+                    }
+                }
+            }
+        ]
+    },
+
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        animation: {
+            duration: 2500,
+            easing: "easeOutQuart",
+            delay: (context) => context.dataIndex * 250
+        },
+
+        transitions: {
+            active: {
+                animation: {
+                    duration: 700
+                }
+            }
+        },
+
+        plugins: {
+            legend: {
+                labels: {
+                    color: "white",
+                    font: {
+                        size: 14,
+                        weight: "bold"
+                    }
+                }
+            }
+        },
+
+        scales: {
+            x: {
+                ticks: {
+                    color: "white",
+                    font: {
+                        size: 13
+                    }
+                },
+                grid: {
+                    color: "rgba(255,255,255,0.08)"
+                }
+            },
+
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: "white",
+                    font: {
+                        size: 13
+                    }
+                },
+                grid: {
+                    color: "rgba(255,255,255,0.08)"
+                }
+            }
+        }
+    }
+});
+
+// ===== HIGH RISK AI ENGINE =====
+const highSeverityIssues = reports.filter(
+    r => (r.severity || "").toLowerCase() === "high"
+).length;
+
+let riskText = "";
+
+if (highSeverityIssues === 0) {
+    riskText = "✅ No critical issues detected. City risk is low.";
+}
+else if (highSeverityIssues <= 2) {
+    riskText = `⚠️ ${highSeverityIssues} high severity issue(s) detected. Moderate risk zone identified.`;
+}
+else {
+    riskText = `🚨 ${highSeverityIssues} critical unresolved issues detected. Immediate action recommended.`;
+}
+
+document.getElementById("riskAlertText").textContent = riskText;
+function predictTrafficRisk() {
+    const reports = JSON.parse(localStorage.getItem("reports")) || [];
+
+    let trafficCount = reports.filter(r =>
+        (r.type || "").toLowerCase() === "traffic" ||
+        (r.issue || "").toLowerCase().includes("traffic") ||
+        (r.issue || "").toLowerCase().includes("jam")
+    ).length;
+
+    let risk = "";
+    let probability = 0;
+
+    if (trafficCount === 0) {
+        risk = "LOW 🟢";
+        probability = 20;
+    } 
+    else if (trafficCount <= 2) {
+        risk = "MODERATE 🟡";
+        probability = 55;
+    } 
+    else {
+        risk = "HIGH 🔴";
+        probability = 82;
+    }
+
+    document.getElementById("trafficRisk").innerHTML =
+        `${risk}<br>AI congestion probability: ${probability}%`;
+}
+
+predictTrafficRisk();
+
+</script>
+
+</body>
+</html>
