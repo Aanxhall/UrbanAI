@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanAI Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+</head>
+<body>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- TOP NAVBAR -->
+    <div class="top-navbar">
+        <div class="nav-left">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+            <div class="brand-block">
+                <h2>UrbanAI</h2>
+                <p>AI-powered Urban Intelligence</p>
+            </div>
+        </div>
+
+        <div class="nav-right">
+
+    <!-- Notification Button -->
+    <div class="notification-wrapper" onclick="toggleNotifications()">
+        <span class="top-icon">🔔</span>
+        <span id="notificationDot" class="notification-dot"></span>
+    </div>
+
+    <!-- Notification Dropdown -->
+    <div id="notificationDropdown" class="notification-dropdown">
+        <p>🚨 3 new city alerts</p>
+        <p>📌 2 complaints pending</p>
+        <p>🛣️ Road damage reported</p>
+    </div>
+
+    <!-- Profile -->
+    <div class="profile-box-top" onclick="toggleProfileMenu()">
+        <div class="profile-avatar">U</div>
+
+        <div class="profile-text">
+            <h4>Umar</h4>
+            <p>Admin Access</p>
+        </div>
+    </div>
+
+    <!-- Profile Dropdown -->
+    <div id="profileDropdown" class="profile-dropdown">
+        <button onclick="logoutUser()">🚪 Logout</button>
+    </div>
+
+</div>
+    </div>
+
+    <div class="container">
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <ul>
+                <li class="active" onclick="goTo('dashboard.html')">🏠 Dashboard</li>
+                <li onclick="goTo('reports.html')">📋 Reports</li>
+                <li onclick="goTo('analytics.html')">📊 Analytics</li>
+                <li onclick="goTo('discover.html')">🕌 Explore Hyderabad</li>
+                <li onclick="goTo('alerts.html')">🚨 Alerts</li>
+                <li onclick="goTo('road_damage.html')">🛣️ Road Damage</li>
+            </ul>
+        </div>
+
+        <!-- MAIN DASHBOARD -->
+        <div class="dashboard-main">
+
+            <!-- WELCOME HEADER -->
+            <div class="dashboard-header-box">
+                <div class="dashboard-welcome">
+                    <h1>Welcome back, Umar 👋</h1>
+                    <p>Hyderabad Smart City Dashboard</p>
+                </div>
+            </div>
+
+            <!-- MAP -->
+            <section class="dashboard-section">
+                <div class="map-container">
+                    <div class="map-top-bar">
+                        <h3>🗺️ City Live Map</h3>
+                    </div>
+                    <div id="map"></div>
+                </div>
+
+                <!-- TOP CARDS -->
+                <div class="top-cards moved-cards">
+                    <div class="card stat-card">
+                        <h3>🚗 Traffic Status</h3>
+                        <p class="status high" id="trafficStatus">Analyzing...</p>
+                    </div>
+
+                    <div class="card stat-card">
+                        <h3>🔮 Traffic Prediction</h3>
+                        <p id="trafficPrediction">Calculating...</p>
+                    </div>
+
+                    <div class="card stat-card">
+                        <h3>🔥 Crowd Level</h3>
+                        <p class="status medium">Moderate</p>
+                    </div>
+
+                    <div class="card stat-card">
+                        <h3>🌤️ Live Weather</h3>
+                        <p id="weatherTemp">Loading...</p>
+                        <small id="weatherDesc"></small>
+                    </div>
+
+                    <div class="card weather-ai-card">
+                        <h3>🌦️ Weather AI Alert</h3>
+                        <p id="weatherAlertText">Fetching live weather insights...</p>
+                    </div>
+                </div>
+
+                <!-- BOTTOM CARDS -->
+                <div class="bottom-cards">
+                    <div class="card">
+                        <h3>🌍 Air Quality Index</h3>
+                        <p id="aqiValue">Loading...</p>
+                        <small id="aqiStatus"></small>
+                    </div>
+
+                    <div class="card">
+                        <h3>📊 Complaints Overview</h3>
+                        <p id="totalComplaints" style="font-size: 28px;">0 Total</p>
+                        <small id="complaintStats">Pending: 0 | Resolved: 0</small>
+                        <p id="efficiencyText">Efficiency: 0%</p>
+
+                        <div class="progress-bar">
+                            <div class="progress"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>🚛 Waste Management</h3>
+                        <p>Next Pickup: 15 min</p>
+                        <small>Route Optimized ✅</small>
+                    </div>
+
+                    <div class="card heatmap-card">
+                        <h3>📍 Issue Heatmap</h3>
+
+                        <div class="mini-heatmap">
+                            <div class="heat-core"></div>
+                            <div class="heat-ring ring1"></div>
+                            <div class="heat-ring ring2"></div>
+                            <div class="heat-ring ring3"></div>
+                        </div>
+
+                        <p id="heatmapInsight">AI analyzing hotspot zones...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat-btn" onclick="toggleChat()">💬</div>
+
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">UrbanAI Assistant</div>
+
+        <div class="chat-body" id="chatBody">
+            <p><b>Bot:</b> 👋 Hello! I'm UrbanAI Assistant. Ask me about traffic, alerts, or AI analysis.</p>
+        </div>
+
+        <input
+            type="text"
+            id="userInput"
+            placeholder="Type a message..."
+            onkeydown="handleKey(event)"
+        />
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
